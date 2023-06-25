@@ -81,18 +81,6 @@ public final class NTRegistry {
             .title(Component.translatable("item_group." + NomadicTents.MODID))
             .icon(() -> new ItemStack(TINY_YURT.get()))
             .displayItems((params, output) -> {
-                for (RegistryObject<Block> registryObject : BLOCKS.getEntries()) {
-                    System.out.println("=================================");
-                    Block block = registryObject.get();
-                    System.out.println(block);
-                    try {
-                        output.accept(block);
-                    }
-                    catch (IllegalArgumentException ae) {
-                        System.out.println("Skip " + block  + ". Reason: " + ae);
-                    }
-                    System.out.println("=================================");
-                }
                 for (RegistryObject<Item> registryObject : ITEMS.getEntries()) {
                     output.accept(registryObject.get());
                 }
