@@ -3,6 +3,7 @@ package nomadictents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -76,6 +77,7 @@ public final class NTRegistry {
         registerItems();
         // creative mode tab
         REGISTRAR.register(NomadicTents.MODID, () -> CreativeModeTab.builder()
+            .title(Component.translatable("item_group." + NomadicTents.MODID))
             .icon(() -> new ItemStack(TINY_YURT.get()))
             .displayItems((params, output) -> {
                 for (RegistryObject<Block> registryObject : BLOCKS.getEntries()) {
