@@ -69,6 +69,7 @@ public final class NTRegistry {
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
         BLOCK_ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
         RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        REGISTRAR.register(FMLJavaModLoadingContext.get().getModEventBus());
         // event listeners
         FMLJavaModLoadingContext.get().getModEventBus().addListener(NTRegistry::onSetup);
         // blocks
@@ -81,7 +82,16 @@ public final class NTRegistry {
             .icon(() -> new ItemStack(TINY_YURT.get()))
             .displayItems((params, output) -> {
                 for (RegistryObject<Block> registryObject : BLOCKS.getEntries()) {
-                    output.accept(registryObject.get());
+                    System.out.println("=================================");
+                    Block block = registryObject.get();
+                    System.out.println(block);
+                    try {
+                        output.accept(block);
+                    }
+                    catch (IllegalArgumentException ae) {
+                        System.out.println("Skip " + block  + ". Reason: " + ae);
+                    }
+                    System.out.println("=================================");
                 }
                 for (RegistryObject<Item> registryObject : ITEMS.getEntries()) {
                     output.accept(registryObject.get());
