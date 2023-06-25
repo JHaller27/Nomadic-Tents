@@ -37,6 +37,7 @@
   },
   "spawn_costs": {},
   "player_spawn_friendly": true,
+  "has_precipitation": true,
   "precipitation": "rain",
   "creature_spawn_probability": 0,
   "temperature": 0.8,
