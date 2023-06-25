@@ -2,12 +2,11 @@ package nomadictents.dimension;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -24,6 +23,7 @@ import net.minecraft.world.level.biome.FixedBiomeSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
 import net.minecraft.world.level.levelgen.RandomState;
@@ -46,7 +46,7 @@ import java.util.concurrent.Executor;
  */
 public class EmptyChunkGenerator extends ChunkGenerator {
     // we can define the dimension's biome in a json at data/yourmod/worldgen/biome/your_biome
-    public static ResourceKey<Biome> TENT_BIOME = ResourceKey.create(Registry.BIOME_REGISTRY,
+    public static ResourceKey<Biome> TENT_BIOME = ResourceKey.create(Registries.BIOME,
             new ResourceLocation(NomadicTents.MODID, "tent"));
 
     // this Codec will need to be registered to the chunk generator registry in Registry
@@ -54,30 +54,30 @@ public class EmptyChunkGenerator extends ChunkGenerator {
     // (unless and until a forge registry wrapper becomes made for chunk generators)
     public static final Codec<EmptyChunkGenerator> CODEC = RecordCodecBuilder.create(builder -> builder.group(
             // the registry lookup doesn't actually serialize, so we don't need a field for it
-            RegistryOps.retrieveRegistry(Registry.STRUCTURE_SET_REGISTRY).forGetter(EmptyChunkGenerator::getStructureSetRegistry),
-            RegistryOps.retrieveRegistry(Registry.BIOME_REGISTRY).forGetter(EmptyChunkGenerator::getBiomeRegistry)
+            RegistryOps.retrieveRegistryLookup(Registries.STRUCTURE_SET).forGetter(EmptyChunkGenerator::getStructureSetRegistry),
+            RegistryOps.retrieveRegistryLookup(Registries.BIOME).forGetter(EmptyChunkGenerator::getBiomeRegistry)
     ).apply(builder, EmptyChunkGenerator::new));
 
-    private final Registry<StructureSet> structures;
-    private final Registry<Biome> biomes;
+    private final HolderLookup.RegistryLookup<StructureSet> structures;
+    private final HolderLookup.RegistryLookup<Biome> biomes;
 
-    public Registry<StructureSet> getStructureSetRegistry() {
+    public HolderLookup.RegistryLookup<StructureSet> getStructureSetRegistry() {
         return structures;
     }
 
-    public Registry<Biome> getBiomeRegistry() {
+    public HolderLookup.RegistryLookup<Biome> getBiomeRegistry() {
         return this.biomes;
     }
 
     // create chunk generator at runtime when dynamic dimension is created
     public EmptyChunkGenerator(MinecraftServer server) {
-        this(server.registryAccess().registryOrThrow(Registry.STRUCTURE_SET_REGISTRY),
-                server.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY));
+        this(server.registryAccess().lookupOrThrow(Registries.STRUCTURE_SET),
+                server.registryAccess().lookupOrThrow(Registries.BIOME));
     }
 
     // create chunk generator when dimension is loaded from the dimension registry on server init
-    public EmptyChunkGenerator(Registry<StructureSet> structures, Registry<Biome> biomes) {
-        super(structures, Optional.empty(), new FixedBiomeSource(biomes.getHolderOrThrow(TENT_BIOME)));
+    public EmptyChunkGenerator(HolderLookup.RegistryLookup<StructureSet> structures, HolderLookup.RegistryLookup<Biome> biomes) {
+        super(new FixedBiomeSource(biomes.getOrThrow(TENT_BIOME)));
         this.structures = structures;
         this.biomes = biomes;
     }
@@ -156,7 +156,7 @@ public class EmptyChunkGenerator extends ChunkGenerator {
 
     // create structures
     @Override
-    public void createStructures(RegistryAccess registries, RandomState randomState, StructureManager structures, ChunkAccess chunk, StructureTemplateManager templates, long seed) {
+    public void createStructures(RegistryAccess registries, ChunkGeneratorStructureState state, StructureManager structures, ChunkAccess chunk, StructureTemplateManager templates) {
         // no structures
     }
 

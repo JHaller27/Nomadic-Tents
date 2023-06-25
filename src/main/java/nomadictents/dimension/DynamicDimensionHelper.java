@@ -5,6 +5,8 @@ import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -15,7 +17,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.border.BorderChangeListener;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
@@ -24,6 +28,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 import nomadictents.NomadicTents;
 import nomadictents.structure.TentPlacer;
 import nomadictents.util.Tent;
@@ -56,7 +61,7 @@ public class DynamicDimensionHelper {
         // ensure destination chunk is loaded before we put the player in it
         targetWorld.getChunk(targetPos);
         // place tent at location
-        TentPlacer.getInstance().placeOrUpgradeTent(targetWorld, targetPos, tent, (ServerLevel) entity.level, entity.position(), entity.getYRot());
+        TentPlacer.getInstance().placeOrUpgradeTent(targetWorld, targetPos, tent, (ServerLevel) entity.level(), entity.position(), entity.getYRot());
         // teleport the entity
         sendToDimension(entity, targetWorld, targetVec, targetRot);
     }
@@ -73,7 +78,7 @@ public class DynamicDimensionHelper {
         // add 180 degrees to target rotation
         targetRot = Mth.wrapDegrees(targetRot + 180.0F);
         // ensure destination chunk is loaded before we put the player in it
-        targetWorld.getChunk(new BlockPos(targetVec));
+        targetWorld.getChunk(new BlockPos((int)targetVec.x, (int)targetVec.y, (int)targetVec.z));
         // teleport the entity
         sendToDimension(entity, targetWorld, targetVec, targetRot);
     }
@@ -89,7 +94,7 @@ public class DynamicDimensionHelper {
      */
     private static void sendToDimension(Entity entity, ServerLevel targetWorld, Vec3 targetVec, float targetRot) {
         // ensure destination chunk is loaded before we put the player in it
-        targetWorld.getChunk(new BlockPos(targetVec));
+        targetWorld.getChunk(new BlockPos((int)targetVec.x, (int)targetVec.y, (int)targetVec.z));
         // teleport the entity
         ITeleporter teleporter = DirectTeleporter.create(entity, targetVec, targetRot, TentPlacer.TENT_DIRECTION);
         entity.changeDimension(targetWorld, teleporter);
@@ -157,73 +162,75 @@ public class DynamicDimensionHelper {
         ServerLevel existingLevel = map.get(levelKey);
 
         // if the world already exists, return it
-        if (null == existingLevel) {
-            return createAndRegisterWorldAndDimension(server, map, levelKey, dimensionFactory);
-        }
+//        if (null == existingLevel) {
+//            return createAndRegisterWorldAndDimension(server, map, levelKey, dimensionFactory);
+//        }
         return existingLevel;
     }
 
-    @SuppressWarnings("deprecation") // markWorldsDirty is deprecated, see below
-    private static ServerLevel createAndRegisterWorldAndDimension(MinecraftServer server,
-                                                                  Map<ResourceKey<Level>, ServerLevel> map, ResourceKey<Level> worldKey,
-                                                                  BiFunction<MinecraftServer, ResourceKey<LevelStem>, LevelStem> dimensionFactory) {
-
-        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
-        ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, worldKey.location());
-        LevelStem dimension = dimensionFactory.apply(server, dimensionKey);
-
-        // we need to get some private fields from MinecraftServer here
-        // chunkStatusListenerFactory
-        // backgroundExecutor
-        // anvilConverterForAnvilFile
-        // the int in create() here is radius of chunks to watch, 11 is what the server uses when it initializes worlds
-        ChunkProgressListener chunkListener = server.progressListenerFactory.create(11);
-        Executor executor = server.executor;
-        LevelStorageAccess levelSave = server.storageSource;
-
-        final WorldData worldData = server.getWorldData();
-        final WorldGenSettings worldGenSettings = worldData.worldGenSettings();
-        final DerivedLevelData derivedLevelData = new DerivedLevelData(worldData, worldData.overworldData());
-        // now we have everything we need to create the dimension and the level
-        // this is the same order server init creates levels:
-        // the dimensions are already registered when levels are created, we'll do that first
-        // then instantiate level, add border listener, add to map, fire world load event
-
-        // register the actual dimension
-        Registry<LevelStem> dimensionRegistry = worldGenSettings.dimensions();
-        if (dimensionRegistry instanceof WritableRegistry<LevelStem> writableRegistry) {
-            writableRegistry.register(dimensionKey, dimension, Lifecycle.stable());
-        } else {
-            throw new IllegalStateException(String.format("Unable to register dimension %s -- dimension registry not writable", dimensionKey.location()));
-        }
-
-        // now we have everything we need to create the world instance
-        ServerLevel newWorld = new ServerLevel(
-                server,
-                executor,
-                levelSave,
-                derivedLevelData,
-                worldKey,
-                dimension,
-                chunkListener,
-                worldGenSettings.isDebug(),
-                BiomeManager.obfuscateSeed(worldGenSettings.seed()),
-                ImmutableList.of(),
-                false   // "tick time", true for overworld, always false for everything else
-        );
-
-        // add world border listener
-        overworld.getWorldBorder().addListener(new BorderChangeListener.DelegateBorderChangeListener(newWorld.getWorldBorder()));
-
-        // register world
-        map.put(worldKey, newWorld);
-
-        // update forge's world cache (very important, if we don't do this then the new world won't tick!)
-        server.markWorldsDirty();
-
-        // fire world load event
-        MinecraftForge.EVENT_BUS.post(new LevelEvent.Load(newWorld)); // event isn't cancellable
-
-        return newWorld;
-    }
+//    @SuppressWarnings("deprecation") // markWorldsDirty is deprecated, see below
+//    private static ServerLevel createAndRegisterWorldAndDimension(MinecraftServer server,
+//                                                                  Map<ResourceKey<Level>, ServerLevel> map, ResourceKey<Level> worldKey,
+//                                                                  BiFunction<MinecraftServer, ResourceKey<LevelStem>, LevelStem> dimensionFactory) {
+//
+//        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
+//        ResourceKey<Registry<LevelStem>> levelStemRegistry = ResourceKey.createRegistryKey(worldKey.location());
+//        ResourceKey<LevelStem> dimensionKey = ResourceKey.create(levelStemRegistry, levelStemRegistry.location());
+//        LevelStem dimension = dimensionFactory.apply(server, dimensionKey);
+//
+//        // we need to get some private fields from MinecraftServer here
+//        // chunkStatusListenerFactory
+//        // backgroundExecutor
+//        // anvilConverterForAnvilFile
+//        // the int in create() here is radius of chunks to watch, 11 is what the server uses when it initializes worlds
+//        ChunkProgressListener chunkListener = server.progressListenerFactory.create(11);
+//        Executor executor = server.executor;
+//        LevelStorageAccess levelSave = server.storageSource;
+//
+//        final WorldData worldData = server.getWorldData();
+//        final DerivedLevelData derivedLevelData = new DerivedLevelData(worldData, worldData.overworldData());
+//        // now we have everything we need to create the dimension and the level
+//        // this is the same order server init creates levels:
+//        // the dimensions are already registered when levels are created, we'll do that first
+//        // then instantiate level, add border listener, add to map, fire world load event
+//
+//        // register the actual dimension
+//        final WorldGenSettings worldGenSettings = worldData.worldGenSettings();
+//        Registry<LevelStem> dimensionRegistry = worldGenSettings.dimensions().dimensions();
+//        if (dimensionRegistry instanceof WritableRegistry<LevelStem> writableRegistry) {
+//            writableRegistry.register(dimensionKey, dimension, Lifecycle.stable());
+//        } else {
+//            throw new IllegalStateException(String.format("Unable to register dimension %s -- dimension registry not writable", dimensionKey.location()));
+//        }
+//
+//        // now we have everything we need to create the world instance
+//        ServerLevel newWorld = new ServerLevel(
+//                server,
+//                executor,
+//                levelSave,
+//                derivedLevelData,
+//                worldKey,
+//                dimension,
+//                chunkListener,
+//                worldGenSettings.dimensions().isDebug(),
+//                BiomeManager.obfuscateSeed(worldGenSettings.options().seed()),
+//                ImmutableList.of(),
+//                false,   // "tick time", true for overworld, always false for everything else,
+//                null
+//        );
+//
+//        // add world border listener
+//        overworld.getWorldBorder().addListener(new BorderChangeListener.DelegateBorderChangeListener(newWorld.getWorldBorder()));
+//
+//        // register world
+//        map.put(worldKey, newWorld);
+//
+//        // update forge's world cache (very important, if we don't do this then the new world won't tick!)
+//        server.markWorldsDirty();
+//
+//        // fire world load event
+//        MinecraftForge.EVENT_BUS.post(new LevelEvent.Load(newWorld)); // event isn't cancellable
+//
+//        return newWorld;
+//    }
 }

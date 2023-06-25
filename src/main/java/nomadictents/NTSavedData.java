@@ -1,6 +1,7 @@
 package nomadictents;
 
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceKey;
@@ -76,7 +77,7 @@ public class NTSavedData extends SavedData {
             do {
                 uuid = UUID.randomUUID();
                 dimension = new ResourceLocation(NomadicTents.MODID, uuid.toString());
-                worldKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, dimension);
+                worldKey = ResourceKey.create(Registries.DIMENSION, dimension);
             } while (server.levelKeys().contains(worldKey));
             // add uuid to the map
             tentIdMap.put(tentId, uuid);
@@ -89,7 +90,7 @@ public class NTSavedData extends SavedData {
     public ResourceKey<Level> getOrCreateKey(final MinecraftServer server, final int tentId) {
         UUID uuid = getOrCreateUuid(server, tentId);
         ResourceLocation dimension = new ResourceLocation(NomadicTents.MODID, uuid.toString());
-        return ResourceKey.create(Registry.DIMENSION_REGISTRY, dimension);
+        return ResourceKey.create(Registries.DIMENSION, dimension);
     }
 
     public int getNextTentId() {

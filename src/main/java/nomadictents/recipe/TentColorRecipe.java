@@ -2,12 +2,14 @@ package nomadictents.recipe;
 
 import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapedRecipe;
@@ -22,7 +24,7 @@ public class TentColorRecipe extends ShapedRecipe {
 
     public TentColorRecipe(ResourceLocation recipeId, final ItemStack outputItem, final DyeColor color,
                            final int width, final int height, final NonNullList<Ingredient> recipeItemsIn) {
-        super(recipeId, Serializer.CATEGORY, width, height, recipeItemsIn, outputItemWithColor(outputItem, color));
+        super(recipeId, Serializer.CATEGORY, CraftingBookCategory.EQUIPMENT, width, height, recipeItemsIn, outputItemWithColor(outputItem, color));
         this.color = color;
     }
 
@@ -51,8 +53,8 @@ public class TentColorRecipe extends ShapedRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer craftingInventory) {
-        ItemStack result = super.assemble(craftingInventory);
+    public ItemStack assemble(CraftingContainer craftingInventory, RegistryAccess registryAccess) {
+        ItemStack result = super.assemble(craftingInventory, registryAccess);
 
         // locate input tent
         ItemStack tent = TentSizeRecipe.getStackMatching(craftingInventory, i -> i.getItem() instanceof TentItem);
@@ -89,7 +91,7 @@ public class TentColorRecipe extends ShapedRecipe {
                 sColor = json.get("color").getAsString();
             }
             final DyeColor color = DyeColor.byName(sColor, DyeColor.WHITE);
-            return new TentColorRecipe(recipeId, recipe.getResultItem(), color,
+            return new TentColorRecipe(recipeId, recipe.getResultItem(null), color,
                     recipe.getWidth(), recipe.getHeight(), recipe.getIngredients());
         }
 
@@ -99,7 +101,7 @@ public class TentColorRecipe extends ShapedRecipe {
             ShapedRecipe recipe = super.fromNetwork(recipeId, buffer);
             int iColor = buffer.readInt();
             final DyeColor color = DyeColor.byId(iColor);
-            return new TentColorRecipe(recipeId, recipe.getResultItem(), color,
+            return new TentColorRecipe(recipeId, recipe.getResultItem(null), color,
                     recipe.getWidth(), recipe.getHeight(), recipe.getIngredients());
         }
 

@@ -29,7 +29,7 @@ public enum TentSize implements StringRepresentable {
                 return DataResult.success(t);
             }
         }
-        return DataResult.error("Failed to parse tent size '" + id + "'");
+        return DataResult.error(() -> "Failed to parse tent size '" + id + "'");
     }
 
     @Override

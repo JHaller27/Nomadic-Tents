@@ -25,7 +25,7 @@ public enum TentType implements StringRepresentable {
                 return DataResult.success(t);
             }
         }
-        return DataResult.error("Failed to parse tent type '" + id + "'");
+        return DataResult.error(() -> "Failed to parse tent type '" + id + "'");
     }
 
     @Override

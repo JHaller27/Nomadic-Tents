@@ -25,8 +25,8 @@ public class TepeeStructureProcessor extends StructureProcessor {
     @Override
     public StructureTemplate.StructureBlockInfo process(LevelReader level, BlockPos rawPos, BlockPos pos, StructureTemplate.StructureBlockInfo rawBlockInfo, StructureTemplate.StructureBlockInfo blockInfo, StructurePlaceSettings placementSettings, @Nullable StructureTemplate template) {
         // process blank tepee wall
-        BlockPos p = blockInfo.pos;
-        if (blockInfo.state.getBlock() == NTRegistry.BLANK_TEPEE_WALL.get()) {
+        BlockPos p = blockInfo.pos();
+        if (blockInfo.state().getBlock() == NTRegistry.BLANK_TEPEE_WALL.get()) {
             RandomSource rand = placementSettings.getRandom(null);
             // random pattern using block position as seed
             if (p.getY() % 2 == 0) {

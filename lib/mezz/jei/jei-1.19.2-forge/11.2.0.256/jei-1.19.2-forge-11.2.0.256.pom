@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>mezz.jei</groupId>
+  <artifactId>jei-1.19.2-forge</artifactId>
+  <version>11.2.0.256</version>
+  <dependencies>
+    <dependency>
+      <groupId>mezz.jei</groupId>
+      <artifactId>jei-1.19.2-core</artifactId>
+      <version>11.2.0.256</version>
+    </dependency>
+    <dependency>
+      <groupId>mezz.jei</groupId>
+      <artifactId>jei-1.19.2-common</artifactId>
+      <version>11.2.0.256</version>
+    </dependency>
+    <dependency>
+      <groupId>mezz.jei</groupId>
+      <artifactId>jei-1.19.2-common-api</artifactId>
+      <version>11.2.0.256</version>
+    </dependency>
+    <dependency>
+      <groupId>mezz.jei</groupId>
+      <artifactId>jei-1.19.2-forge-api</artifactId>
+      <version>11.2.0.256</version>
+    </dependency>
+  </dependencies>
+</project>

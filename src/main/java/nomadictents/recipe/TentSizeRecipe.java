@@ -2,11 +2,13 @@ package nomadictents.recipe;
 
 import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapedRecipe;
@@ -19,12 +21,12 @@ public class TentSizeRecipe extends ShapedRecipe {
 
     public TentSizeRecipe(ResourceLocation recipeId, final ItemStack outputItem,
                           final int width, final int height, final NonNullList<Ingredient> recipeItemsIn) {
-        super(recipeId, Serializer.CATEGORY, width, height, recipeItemsIn, outputItem);
+        super(recipeId, Serializer.CATEGORY, CraftingBookCategory.EQUIPMENT, width, height, recipeItemsIn, outputItem);
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer craftingInventory) {
-        ItemStack result = super.assemble(craftingInventory);
+    public ItemStack assemble(CraftingContainer craftingInventory, RegistryAccess registryAccess) {
+        ItemStack result = super.assemble(craftingInventory, registryAccess);
 
         // locate input tent
         ItemStack tent = getStackMatching(craftingInventory, i -> i.getItem() instanceof TentItem);
@@ -67,7 +69,7 @@ public class TentSizeRecipe extends ShapedRecipe {
         public ShapedRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             // read the recipe from shapeless recipe serializer
             final ShapedRecipe recipe = super.fromJson(recipeId, json);
-            return new TentSizeRecipe(recipeId, recipe.getResultItem(),
+            return new TentSizeRecipe(recipeId, recipe.getResultItem(null),
                     recipe.getWidth(), recipe.getHeight(), recipe.getIngredients());
         }
 

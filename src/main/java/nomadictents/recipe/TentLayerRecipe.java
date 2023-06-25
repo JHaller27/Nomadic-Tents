@@ -2,11 +2,14 @@ package nomadictents.recipe;
 
 import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapedRecipe;
@@ -21,7 +24,7 @@ public class TentLayerRecipe extends ShapedRecipe {
 
     public TentLayerRecipe(ResourceLocation recipeId, final ItemStack outputItem, final byte layer,
                            final int width, final int height, final NonNullList<Ingredient> recipeItemsIn) {
-        super(recipeId, Serializer.CATEGORY, width, height, recipeItemsIn, outputItemWithLayer(outputItem, layer));
+        super(recipeId, Serializer.CATEGORY, CraftingBookCategory.EQUIPMENT, width, height, recipeItemsIn, outputItemWithLayer(outputItem, layer));
         this.layer = layer;
     }
 
@@ -44,8 +47,8 @@ public class TentLayerRecipe extends ShapedRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer craftingInventory) {
-        ItemStack result = super.assemble(craftingInventory);
+    public ItemStack assemble(CraftingContainer craftingInventory, RegistryAccess registryAccess) {
+        ItemStack result = super.assemble(craftingInventory, registryAccess);
 
         // locate input tent
         ItemStack tent = TentSizeRecipe.getStackMatching(craftingInventory, i -> i.getItem() instanceof TentItem);
@@ -80,7 +83,7 @@ public class TentLayerRecipe extends ShapedRecipe {
             if (json.has("layer")) {
                 bLayer = json.get("layer").getAsByte();
             }
-            return new TentLayerRecipe(recipeId, recipe.getResultItem(), bLayer,
+            return new TentLayerRecipe(recipeId, recipe.getResultItem(null), bLayer,
                     recipe.getWidth(), recipe.getHeight(), recipe.getIngredients());
         }
 
@@ -88,7 +91,7 @@ public class TentLayerRecipe extends ShapedRecipe {
         public ShapedRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             ShapedRecipe recipe = super.fromNetwork(recipeId, buffer);
             byte layer = buffer.readByte();
-            return new TentLayerRecipe(recipeId, recipe.getResultItem(), layer,
+            return new TentLayerRecipe(recipeId, recipe.getResultItem(null), layer,
                     recipe.getWidth(), recipe.getHeight(), recipe.getIngredients());
         }
 

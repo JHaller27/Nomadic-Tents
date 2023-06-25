@@ -87,13 +87,16 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 repositories {
     maven { // JEI
         name 'mezz'
-        url 'https://dvs1.progwml6.com/files/maven'
+        url 'file://C:/Users/james/git/Nomadic-Tents/lib'
     }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
-	
+
+//    compileOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.2.0.256")
+//    runtimeOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.2.0.256")
+
 	compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 	runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 

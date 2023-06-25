@@ -25,7 +25,7 @@ public final class NTEvents {
 
         @SubscribeEvent
         public static void onPlayerWake(final PlayerWakeUpEvent event) {
-            if (event.getEntity().level.isClientSide()) {
+            if (event.getEntity().level().isClientSide()) {
                 return;
             }
             // locate overworld
@@ -39,10 +39,10 @@ public final class NTEvents {
             List<ResourceKey<Level>> tents = DynamicDimensionHelper.getTents(event.getEntity().getServer());
             // attempt to change daytime when sleeping inside a tent
             if (event.getEntity().isSleepingLongEnough()
-                    && DynamicDimensionHelper.isInsideTent(event.getEntity().level)
+                    && DynamicDimensionHelper.isInsideTent(event.getEntity().level())
                     && overworld.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
                 // locate server worlds
-                ServerLevel tent = (ServerLevel) event.getEntity().level;
+                ServerLevel tent = (ServerLevel) event.getEntity().level();
                 boolean success = arePlayersSleeping(tent);
                 // check if all other players are sleeping
                 if (NomadicTents.CONFIG.SLEEPING_STRICT.get()) {
@@ -96,7 +96,7 @@ public final class NTEvents {
 
         @SubscribeEvent
         public static void onPlayerChangeDimension(final PlayerEvent.PlayerChangedDimensionEvent event) {
-            if (!event.getEntity().level.isClientSide() && DynamicDimensionHelper.isInsideTent(event.getTo().location())) {
+            if (!event.getEntity().level().isClientSide() && DynamicDimensionHelper.isInsideTent(event.getTo().location())) {
                 // locate tent dimension
                 ServerLevel tent = event.getEntity().getServer().getLevel(event.getTo());
                 if (null == tent) {
@@ -116,7 +116,7 @@ public final class NTEvents {
 
         @SubscribeEvent
         public static void onPlayerTeleportEnderPearl(final EntityTeleportEvent.EnderPearl event) {
-            if (DynamicDimensionHelper.isInsideTent(event.getPlayer().level) && NomadicTents.CONFIG.RESTRICT_TELEPORT_IN_TENT.get()) {
+            if (DynamicDimensionHelper.isInsideTent(event.getPlayer().level()) && NomadicTents.CONFIG.RESTRICT_TELEPORT_IN_TENT.get()) {
                 event.setCanceled(true);
                 event.getPlayer().displayClientMessage(Component.translatable("tent.teleport.deny"), true);
             }
@@ -124,7 +124,7 @@ public final class NTEvents {
 
         @SubscribeEvent
         public static void onPlayerTeleportChorusFruit(final EntityTeleportEvent.ChorusFruit event) {
-            if (DynamicDimensionHelper.isInsideTent(event.getEntityLiving().level) && NomadicTents.CONFIG.RESTRICT_TELEPORT_IN_TENT.get()) {
+            if (DynamicDimensionHelper.isInsideTent(event.getEntityLiving().level()) && NomadicTents.CONFIG.RESTRICT_TELEPORT_IN_TENT.get()) {
                 event.setCanceled(true);
                 if (event.getEntityLiving() instanceof Player) {
                     ((Player) event.getEntityLiving()).displayClientMessage(Component.translatable("tent.teleport.deny"), true);
