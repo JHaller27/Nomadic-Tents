@@ -1,7 +1,7 @@
 package nomadictents.dimension;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -17,10 +17,8 @@ import nomadictents.NomadicTents;
 // we can define the dimension type in a json at data/yourmod/worldgen/dimension_type/your_dimension_type.json
 // but we'll need to create instances of the chunk generator at runtime since there's no json folder for them
 public class DimensionFactory {
-    private static final ResourceKey<Registry<DimensionType>> TentResourceKey = ResourceKey.createRegistryKey(new ResourceLocation(NomadicTents.MODID, "tent"));
-
-    public static final ResourceKey<DimensionType> TYPE_KEY = ResourceKey.create(TentResourceKey,
-            TentResourceKey.location());
+    public static final ResourceKey<DimensionType> TYPE_KEY = ResourceKey.create(Registries.DIMENSION_TYPE,
+            new ResourceLocation(NomadicTents.MODID, "tent"));
 
     public static LevelStem createDimension(MinecraftServer server, ResourceKey<LevelStem> key) {
         return new LevelStem(getDimensionTypeHolder(server), new EmptyChunkGenerator(server));
@@ -28,7 +26,7 @@ public class DimensionFactory {
 
     public static Holder<DimensionType> getDimensionTypeHolder(MinecraftServer server) {
         return server.registryAccess() // get dynamic registries
-                .registryOrThrow(TentResourceKey)
+                .registryOrThrow(Registries.DIMENSION_TYPE)
                 .getHolderOrThrow(TYPE_KEY);
     }
 }

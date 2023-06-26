@@ -1,11 +1,7 @@
 package nomadictents.dimension;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.WritableRegistry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -17,10 +13,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.border.BorderChangeListener;
-import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.WorldDimensions;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.world.level.storage.WorldData;
@@ -28,7 +21,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 import nomadictents.NomadicTents;
 import nomadictents.structure.TentPlacer;
 import nomadictents.util.Tent;
@@ -159,78 +151,70 @@ public class DynamicDimensionHelper {
         // then we'd just end up making a private-field-getter for it ourselves anyway
         @SuppressWarnings("deprecation")
         Map<ResourceKey<Level>, ServerLevel> map = server.forgeGetWorldMap();
-        ServerLevel existingLevel = map.get(levelKey);
 
         // if the world already exists, return it
-//        if (null == existingLevel) {
-//            return createAndRegisterWorldAndDimension(server, map, levelKey, dimensionFactory);
-//        }
-        return existingLevel;
+        if (map.containsKey(levelKey)) {
+            return map.get(levelKey);
+        }
+        return createAndRegisterWorldAndDimension(server, map, levelKey, dimensionFactory);
     }
 
-//    @SuppressWarnings("deprecation") // markWorldsDirty is deprecated, see below
-//    private static ServerLevel createAndRegisterWorldAndDimension(MinecraftServer server,
-//                                                                  Map<ResourceKey<Level>, ServerLevel> map, ResourceKey<Level> worldKey,
-//                                                                  BiFunction<MinecraftServer, ResourceKey<LevelStem>, LevelStem> dimensionFactory) {
-//
-//        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
-//        ResourceKey<Registry<LevelStem>> levelStemRegistry = ResourceKey.createRegistryKey(worldKey.location());
-//        ResourceKey<LevelStem> dimensionKey = ResourceKey.create(levelStemRegistry, levelStemRegistry.location());
-//        LevelStem dimension = dimensionFactory.apply(server, dimensionKey);
-//
-//        // we need to get some private fields from MinecraftServer here
-//        // chunkStatusListenerFactory
-//        // backgroundExecutor
-//        // anvilConverterForAnvilFile
-//        // the int in create() here is radius of chunks to watch, 11 is what the server uses when it initializes worlds
-//        ChunkProgressListener chunkListener = server.progressListenerFactory.create(11);
-//        Executor executor = server.executor;
-//        LevelStorageAccess levelSave = server.storageSource;
-//
-//        final WorldData worldData = server.getWorldData();
-//        final DerivedLevelData derivedLevelData = new DerivedLevelData(worldData, worldData.overworldData());
-//        // now we have everything we need to create the dimension and the level
-//        // this is the same order server init creates levels:
-//        // the dimensions are already registered when levels are created, we'll do that first
-//        // then instantiate level, add border listener, add to map, fire world load event
-//
-//        // register the actual dimension
-//        final WorldGenSettings worldGenSettings = worldData.worldGenSettings();
-//        Registry<LevelStem> dimensionRegistry = worldGenSettings.dimensions().dimensions();
-//        if (dimensionRegistry instanceof WritableRegistry<LevelStem> writableRegistry) {
-//            writableRegistry.register(dimensionKey, dimension, Lifecycle.stable());
-//        } else {
-//            throw new IllegalStateException(String.format("Unable to register dimension %s -- dimension registry not writable", dimensionKey.location()));
-//        }
-//
-//        // now we have everything we need to create the world instance
-//        ServerLevel newWorld = new ServerLevel(
-//                server,
-//                executor,
-//                levelSave,
-//                derivedLevelData,
-//                worldKey,
-//                dimension,
-//                chunkListener,
-//                worldGenSettings.dimensions().isDebug(),
-//                BiomeManager.obfuscateSeed(worldGenSettings.options().seed()),
-//                ImmutableList.of(),
-//                false,   // "tick time", true for overworld, always false for everything else,
-//                null
-//        );
-//
-//        // add world border listener
-//        overworld.getWorldBorder().addListener(new BorderChangeListener.DelegateBorderChangeListener(newWorld.getWorldBorder()));
-//
-//        // register world
-//        map.put(worldKey, newWorld);
-//
-//        // update forge's world cache (very important, if we don't do this then the new world won't tick!)
-//        server.markWorldsDirty();
-//
-//        // fire world load event
-//        MinecraftForge.EVENT_BUS.post(new LevelEvent.Load(newWorld)); // event isn't cancellable
-//
-//        return newWorld;
-//    }
+    @SuppressWarnings("deprecation") // markWorldsDirty is deprecated, see below
+    private static ServerLevel createAndRegisterWorldAndDimension(MinecraftServer server,
+                                                                  Map<ResourceKey<Level>, ServerLevel> map, ResourceKey<Level> worldKey,
+                                                                  BiFunction<MinecraftServer, ResourceKey<LevelStem>, LevelStem> dimensionFactory) {
+
+        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
+        ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registries.LEVEL_STEM, worldKey.location());
+        LevelStem dimension = dimensionFactory.apply(server, dimensionKey);
+
+        // we need to get some private fields from MinecraftServer here
+        // chunkStatusListenerFactory
+        // backgroundExecutor
+        // anvilConverterForAnvilFile
+        // the int in create() here is radius of chunks to watch, 11 is what the server uses when it initializes worlds
+        ChunkProgressListener chunkListener = server.progressListenerFactory.create(11);
+        Executor executor = server.executor;
+        LevelStorageAccess levelSave = server.storageSource;
+
+        final WorldData worldData = server.getWorldData();
+        final DerivedLevelData derivedLevelData = new DerivedLevelData(worldData, worldData.overworldData());
+        // now we have everything we need to create the dimension and the level
+        // this is the same order server init creates levels:
+        // the dimensions are already registered when levels are created, we'll do that first
+        // then instantiate level, add border listener, add to map, fire world load event
+
+        // register the actual dimension
+        // apparently, there's no need to register the dimension!
+
+        // now we have everything we need to create the world instance
+        ServerLevel newWorld = new ServerLevel(
+                server,
+                executor,
+                levelSave,
+                derivedLevelData,
+                worldKey,
+                dimension,
+                chunkListener,
+                worldData.isDebugWorld(),
+                BiomeManager.obfuscateSeed(worldData.worldGenOptions().seed()),
+                ImmutableList.of(),
+                false,   // "tick time", true for overworld, always false for everything else,
+                null
+        );
+
+        // add world border listener
+        overworld.getWorldBorder().addListener(new BorderChangeListener.DelegateBorderChangeListener(newWorld.getWorldBorder()));
+
+        // register world
+        map.put(worldKey, newWorld);
+
+        // update forge's world cache (very important, if we don't do this then the new world won't tick!)
+        server.markWorldsDirty();
+
+        // fire world load event
+        MinecraftForge.EVENT_BUS.post(new LevelEvent.Load(newWorld)); // event isn't cancellable
+
+        return newWorld;
+    }
 }
