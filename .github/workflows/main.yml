@@ -17,6 +17,8 @@ jobs:
           cache: 'gradle'
       - name: Build with Gradle
         run: ./gradlew build
+        env:
+          JEI_LIB_URL: 'file://${{ github.workspace }}/lib'
       - name: Copy together artifacts
         shell: bash
         run: |
