@@ -87,7 +87,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 repositories {
     maven { // JEI
         name 'mezz'
-        url 'file://C:/Users/james/git/Nomadic-Tents/lib'
+        url System.getenv("JEI_LIB_URL")
     }
 }
 
