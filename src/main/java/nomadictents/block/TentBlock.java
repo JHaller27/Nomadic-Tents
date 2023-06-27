@@ -18,10 +18,10 @@ public class TentBlock extends Block {
         super(properties.noLootTable().strength(-1, 3600000.0F));
     }
 
-    @Override
-    public PushReaction getPistonPushReaction(BlockState state) {
-        return PushReaction.BLOCK;
-    }
+//    @Override
+//    public PushReaction getPistonPushReaction(BlockState state) {
+//        return PushReaction.BLOCK;
+//    }
 
     @Override
     public boolean canEntityDestroy(BlockState state, BlockGetter world, BlockPos pos, Entity entity) {
