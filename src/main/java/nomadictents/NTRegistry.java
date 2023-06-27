@@ -78,7 +78,7 @@ public final class NTRegistry {
         registerItems();
         // creative mode tab
         REGISTRAR.register(NomadicTents.MODID, () -> CreativeModeTab.builder()
-            .title(Component.translatable("item_group." + NomadicTents.MODID))
+            .title(Component.translatable("itemGroup." + NomadicTents.MODID))
             .icon(() -> new ItemStack(TINY_YURT.get()))
             .displayItems((params, output) -> {
                 for (RegistryObject<Item> registryObject : ITEMS.getEntries()) {
